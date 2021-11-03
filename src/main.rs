@@ -1,5 +1,5 @@
 use porcus;
-use std::io;
+use std::io::{self, Write};
 
 fn main() {
 	loop {
@@ -12,7 +12,11 @@ fn main() {
 			break;
 		}
 
-		let as_pig_latin = porcus::to_pig_latin(input);
-		print!("{}", as_pig_latin);
+		let pig_latin = porcus::to_pig_latin(input);
+		if let Err(_) = io::stdout().write(pig_latin.as_bytes()) {
+			break;
+		}
 	}
+
+	io::stdout().flush().expect("Failed to flush stdout buffer");
 }
