@@ -5,4 +5,4 @@ pub mod case;
 pub mod latin;
 
 mod pig_latin;
-pub use crate::pig_latin::to_pig_latin;
+pub use crate::pig_latin::{get_default_transformer, PigLatinTransformer};

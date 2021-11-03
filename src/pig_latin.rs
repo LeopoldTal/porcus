@@ -3,20 +3,55 @@ use crate::{get_char_type_at, CharType};
 use unicode_script::UnicodeScript;
 use unicode_segmentation::UnicodeSegmentation;
 
-pub fn to_pig_latin(s: String) -> String {
-	s.split_word_bounds()
-		.map(|word| word_to_case_matched_pig_latin(word))
-		.collect::<Vec<String>>()
-		.concat()
+pub struct PigLatinTransformer {
+	pub consonant_suffix: String,
+	pub vowel_suffix: String,
 }
 
-fn word_to_case_matched_pig_latin(s: &str) -> String {
-	if should_skip_word(s) {
-		return s.to_string();
+pub fn get_default_transformer() -> PigLatinTransformer {
+	PigLatinTransformer {
+		consonant_suffix: String::from("ay"),
+		vowel_suffix: String::from("way"),
+	}
+}
+
+impl PigLatinTransformer {
+	pub fn to_pig_latin(&self, s: String) -> String {
+		s.split_word_bounds()
+			.map(|word| self.word_to_case_matched_pig_latin(word))
+			.collect::<Vec<String>>()
+			.concat()
 	}
 
-	let pig = word_to_uncased_pig_latin(s);
-	case::to_case(pig, case::detect_case(s))
+	fn word_to_case_matched_pig_latin(&self, s: &str) -> String {
+		if should_skip_word(s) {
+			return s.to_string();
+		}
+
+		let pig = self.word_to_uncased_pig_latin(s);
+		case::to_case(pig, case::detect_case(s))
+	}
+
+	fn word_to_uncased_pig_latin(&self, s: &str) -> String {
+		let graphemes = &s.graphemes(true).collect::<Vec<&str>>();
+
+		let mut prefix_length = 0;
+		while has_consonant_at(graphemes, prefix_length) {
+			prefix_length += 1;
+		}
+
+		if prefix_length == 0 {
+			return format!("{}{}", s, self.vowel_suffix);
+		}
+		let prefix = &graphemes[0..prefix_length];
+		let suffix = &graphemes[prefix_length..];
+		format!(
+			"{}{}{}",
+			suffix.concat(),
+			prefix.concat(),
+			self.consonant_suffix
+		)
+	}
 }
 
 fn should_skip_word(s: &str) -> bool {
@@ -25,22 +60,6 @@ fn should_skip_word(s: &str) -> bool {
 	} else {
 		true
 	}
-}
-
-fn word_to_uncased_pig_latin(s: &str) -> String {
-	let graphemes = &s.graphemes(true).collect::<Vec<&str>>();
-
-	let mut prefix_length = 0;
-	while has_consonant_at(graphemes, prefix_length) {
-		prefix_length += 1;
-	}
-
-	if prefix_length == 0 {
-		return format!("{}way", s);
-	}
-	let prefix = &graphemes[0..prefix_length];
-	let suffix = &graphemes[prefix_length..];
-	format!("{}{}ay", suffix.concat(), prefix.concat())
 }
 
 fn has_consonant_at(graphemes: &Vec<&str>, index: usize) -> bool {
@@ -52,11 +71,12 @@ fn has_consonant_at(graphemes: &Vec<&str>, index: usize) -> bool {
 }
 
 #[cfg(test)]
-mod test_to_pig_latin {
+mod test_default_pig_latin {
 	use super::*;
 
 	fn assert_pig_latin(input: &str, expected: &str) {
-		assert_eq!(to_pig_latin(String::from(input)), expected);
+		let transformer = get_default_transformer();
+		assert_eq!(transformer.to_pig_latin(String::from(input)), expected);
 	}
 
 	#[test]
@@ -138,5 +158,16 @@ mod test_to_pig_latin {
 		assert_pig_latin("Simon Example z״l", "Imonsay Exampleway z״lay");
 		assert_pig_latin("Ploni Almoni a״h", "Oniplay Almoniway a״hway");
 		assert_pig_latin("The Rebbe z״ya", "Ethay Ebberay az״yay");
+	}
+
+	#[test]
+	fn custom_suffixes() {
+		let transformer = PigLatinTransformer {
+			consonant_suffix: String::from("yay"),
+			vowel_suffix: String::from("-hay"),
+		};
+		let result = transformer.to_pig_latin(String::from("Hello, egg!"));
+
+		assert_eq!(result, "Ellohyay, egg-hay!");
 	}
 }
