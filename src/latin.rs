@@ -1,6 +1,11 @@
+//! Sets of Latin-script characters for classifying vowels vs consonants.
+
 use phf::phf_set;
 
-/// Latin vowels, excluding modifiers
+/// Latin-script letters which are always vowels.
+///
+/// All characters are decomposed, e.g. `á` is listed as `a`.
+/// Modifier characters are not listed.
 pub const VOWELS: phf::Set<char> = phf_set! {
 	// Basic Latin
 	'A', 'E', 'I', 'O', 'U', // Uppercase
@@ -61,10 +66,18 @@ pub const VOWELS: phf::Set<char> = phf_set! {
 	'ａ', 'ｅ', 'ｉ', 'ｏ', 'ｕ', // Lowercase
 };
 
+/// Latin-script letters which may be vowels, depending on context.
+///
+/// Currently, these are all variants of `y`.
+/// All characters are decomposed, e.g. `ÿ` is listed as `y`.
+/// Modifier characters are not listed.
 pub const AMBIGUOUS_VOWELS: phf::Set<char> = phf_set! {
 	'Y', 'y', 'Ƴ', 'ƴ', 'Ɏ', 'ɏ', 'ʎ', 'ʏ', 'Ỿ', 'ỿ', 'Ｙ', 'ｙ', 'ꭚ',
 };
 
+/// Punctuation to be treated as consonants for the purpose of Pig Latin.
+///
+/// E.g. `M'lady` becomes `Adym'lay`.
 pub const CONSONANT_LIKE_PUNCTUATION: phf::Set<char> = phf_set! {
 	'\'', '’', '＇', '·', '՟', '״', '‧'
 };
