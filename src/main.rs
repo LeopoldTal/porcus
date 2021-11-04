@@ -1,5 +1,5 @@
 use clap::{App, Arg};
-use porcus::PigLatinTransformer;
+use porcus::{PigLatinTransformer, DEFAULT_CONSONANT_SUFFIX, DEFAULT_VOWEL_SUFFIX};
 use std::io::{self, Write};
 
 fn main() {
@@ -10,14 +10,14 @@ fn main() {
 			Arg::with_name("consonant_suffix")
 				.short("c")
 				.long("consonant")
-				.default_value("ay")
+				.default_value(DEFAULT_CONSONANT_SUFFIX)
 				.help("suffix for words starting with a consonant"),
 		)
 		.arg(
 			Arg::with_name("vowel_suffix")
 				.short("v")
 				.long("vowel")
-				.default_value("way")
+				.default_value(DEFAULT_VOWEL_SUFFIX)
 				.help("suffix for words starting with a vowel"),
 		)
 		.get_matches();

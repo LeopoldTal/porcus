@@ -1,3 +1,4 @@
+use super::{DEFAULT_CONSONANT_SUFFIX, DEFAULT_VOWEL_SUFFIX};
 use crate::case;
 use crate::char_type::{self, CharType};
 use std::fmt;
@@ -89,8 +90,8 @@ impl fmt::Display for PigLatinTransformer {
 impl Default for PigLatinTransformer {
 	fn default() -> Self {
 		Self {
-			consonant_suffix: String::from("ay"),
-			vowel_suffix: String::from("way"),
+			consonant_suffix: String::from(DEFAULT_CONSONANT_SUFFIX),
+			vowel_suffix: String::from(DEFAULT_VOWEL_SUFFIX),
 		}
 	}
 }
