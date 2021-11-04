@@ -1,39 +1,132 @@
+//! Case detection and mapping.
+
+use std::fmt;
 use unicode_segmentation::UnicodeSegmentation;
 
-#[derive(Debug, PartialEq)]
+/// Case of a word.
+#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Case {
+	/// All characters are lowercase or uncased.
 	Lower,
+	/// All characters are uppercase or uncased.
 	Upper,
-	Title,
+	/// The first character is uppercase. All others are lowercase or uncased.
+	Sentence,
+	/// No consistent case pattern.
 	Mixed,
 }
 
-pub fn detect_case(s: &str) -> Case {
-	if let Some(first_char) = s.chars().next() {
-		let rest_is_upper = s.chars().skip(1).all(|c| !c.is_lowercase());
-		let rest_is_lower = s.chars().skip(1).all(|c| !c.is_uppercase());
-
-		match (first_char.is_uppercase(), rest_is_upper, rest_is_lower) {
-			(true, true, _) => Case::Upper,
-			(true, _, true) => Case::Title,
-			(false, _, true) => Case::Lower,
-			_ => Case::Mixed,
-		}
-	} else {
+impl Default for Case {
+	fn default() -> Self {
 		Case::Mixed
 	}
 }
 
-pub fn to_case(s: String, case: Case) -> String {
+impl fmt::Display for Case {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str(match self {
+			Self::Lower => "lowercase",
+			Self::Upper => "UPPERCASE",
+			Self::Sentence => "Sentencecase",
+			Self::Mixed => "MixedCase",
+		})
+	}
+}
+
+/// Detects the case of a word.
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// # use porcus::case::{Case, detect_case};
+/// assert_eq!(detect_case("foobar"), Case::Lower);
+/// assert_eq!(detect_case("FOOBAR"), Case::Upper);
+/// assert_eq!(detect_case("Foobar"), Case::Sentence);
+/// ```
+///
+/// Uncased characters do not affect the detection.
+///
+/// ```
+/// # use porcus::case::{Case, detect_case};
+/// assert_eq!(detect_case("foo_bar"), Case::Lower);
+/// assert_eq!(detect_case("FOO_BAR"), Case::Upper);
+/// assert_eq!(detect_case("Foo_bar"), Case::Sentence);
+/// ```
+///
+/// Single-letter uppercase characters are considered sentence-case rather than uppercase.
+///
+/// ```
+/// # use porcus::case::{Case, detect_case};
+/// assert_eq!(detect_case("I"), Case::Sentence);
+/// assert_eq!(detect_case("Å"), Case::Sentence);
+/// ```
+///
+/// An all-uncased string is considered lowercase.
+///
+/// ```
+/// # use porcus::case::{Case, detect_case};
+/// assert_eq!(detect_case(""), Case::Lower);
+/// assert_eq!(detect_case("42"), Case::Lower);
+/// ```
+///
+/// When no specific case pattern is detected, the string is considered mixed-case.
+///
+/// ```
+/// # use porcus::case::{Case, detect_case};
+/// assert_eq!(detect_case("iPhone"), Case::Mixed);
+/// assert_eq!(detect_case("SpOnGeBoB"), Case::Mixed);
+/// ```
+pub fn detect_case(s: &str) -> Case {
+	if let Some(first_char) = s.chars().next() {
+		let first_is_lower = !first_char.is_uppercase();
+		let first_is_upper = !first_char.is_lowercase();
+		let rest_is_upper = s.chars().skip(1).all(|c| !c.is_lowercase());
+		let rest_is_lower = s.chars().skip(1).all(|c| !c.is_uppercase());
+
+		match (first_is_lower, first_is_upper, rest_is_lower, rest_is_upper) {
+			(true, _, true, _) => Case::Lower,
+			(_, true, true, _) => Case::Sentence,
+			(_, true, _, true) => Case::Upper,
+			_ => Case::Mixed,
+		}
+	} else {
+		Case::Lower
+	}
+}
+
+/// Returns the equivalent of a string as the specified case.
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// # use porcus::case::{Case, to_case};
+/// assert_eq!(to_case("fooBAR", Case::Lower), "foobar");
+/// assert_eq!(to_case("fooBAR", Case::Upper), "FOOBAR");
+/// assert_eq!(to_case("fooBAR", Case::Sentence), "Foobar");
+/// ```
+///
+/// Conversion to mixed case leaves the string unchanged.
+///
+/// ```
+/// # use porcus::case::{Case, to_case};
+/// assert_eq!(to_case("fooBAR", Case::Mixed), "fooBAR");
+/// assert_eq!(to_case("foobar", Case::Mixed), "foobar");
+/// ```
+pub fn to_case<S: Into<String>>(s: S, case: Case) -> String {
+	let s = s.into();
 	match case {
 		Case::Lower => s.to_lowercase(),
 		Case::Upper => s.to_uppercase(),
-		Case::Title => to_title_case(s),
+		Case::Sentence => to_sentence_case(s),
 		Case::Mixed => s,
 	}
 }
 
-fn to_title_case(s: String) -> String {
+fn to_sentence_case(s: String) -> String {
 	let mut graphemes = s.graphemes(true);
 	let first = graphemes.next();
 
@@ -51,6 +144,7 @@ mod test_detect_case {
 
 	#[test]
 	fn lower() {
+		assert_eq!(detect_case(""), Case::Lower);
 		assert_eq!(detect_case("test"), Case::Lower);
 		assert_eq!(detect_case("çà"), Case::Lower);
 		assert_eq!(detect_case("测试"), Case::Lower);
@@ -63,13 +157,15 @@ mod test_detect_case {
 		assert_eq!(detect_case("TEST"), Case::Upper);
 		assert_eq!(detect_case("ÇÀ"), Case::Upper);
 		assert_eq!(detect_case("TEST测试"), Case::Upper);
+		assert_eq!(detect_case("测试TEST"), Case::Upper);
 	}
 
 	#[test]
-	fn title() {
-		assert_eq!(detect_case("Test"), Case::Title);
-		assert_eq!(detect_case("Çà"), Case::Title);
-		assert_eq!(detect_case("X测试test"), Case::Title);
+	fn sentence() {
+		assert_eq!(detect_case("Test"), Case::Sentence);
+		assert_eq!(detect_case("Çà"), Case::Sentence);
+		assert_eq!(detect_case("X测试test"), Case::Sentence);
+		assert_eq!(detect_case("I"), Case::Sentence);
 	}
 
 	#[test]
@@ -107,11 +203,11 @@ mod test_to_case {
 	}
 
 	#[test]
-	fn title() {
-		assert_case_transform("", Case::Title, "");
-		assert_case_transform("tEsT", Case::Title, "Test");
-		assert_case_transform("âgé", Case::Title, "Âgé");
-		assert_case_transform("测试", Case::Title, "测试");
+	fn sentence() {
+		assert_case_transform("", Case::Sentence, "");
+		assert_case_transform("tEsT", Case::Sentence, "Test");
+		assert_case_transform("âgé", Case::Sentence, "Âgé");
+		assert_case_transform("测试", Case::Sentence, "测试");
 	}
 
 	#[test]
