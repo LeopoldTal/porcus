@@ -1,11 +1,35 @@
+use clap::{App, Arg};
 use porcus::PigLatinTransformer;
 use std::io::{self, Write};
 
 fn main() {
-	// TODO:
-	// - show help
-	// - pass suffixes on the command line
-	let transformer = PigLatinTransformer::default();
+	let matches = App::new("porcus")
+		.version("0.1.0")
+		.about("Transforms standard input to pig latin")
+		.arg(
+			Arg::with_name("consonant_suffix")
+				.short("c")
+				.long("consonant")
+				.default_value("ay")
+				.help("suffix for words starting with a consonant"),
+		)
+		.arg(
+			Arg::with_name("vowel_suffix")
+				.short("v")
+				.long("vowel")
+				.default_value("way")
+				.help("suffix for words starting with a vowel"),
+		)
+		.get_matches();
+
+	let consonant_suffix = matches
+		.value_of("consonant_suffix")
+		.expect("Consonant suffix not found in args");
+	let vowel_suffix = matches
+		.value_of("vowel_suffix")
+		.expect("Vowel suffix not found in args");
+
+	let transformer = PigLatinTransformer::new(consonant_suffix, vowel_suffix);
 
 	loop {
 		let mut input = String::new();

@@ -10,7 +10,18 @@
 
 ## Use as an executable
 
-TODO: doc
+````
+porcus [-c consonant_suffix] [-v vowel_suffix]
+````
+
+Transforms standard input to pig latin on the standard output.
+
+### Arguments
+
+* `-c`, `--consonant` consonant_suffix: Suffix for words starting with a consonant [default: `ay`]
+* `-v`, `--vowel` vowel_suffix: Suffix for words starting with a vowel [default: `way`]
+* `-h`, `--help`: print help and exit
+* `-V`, `--version`: print version and exit
 
 ## Use as a library
 
