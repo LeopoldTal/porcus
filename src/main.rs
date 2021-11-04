@@ -1,8 +1,12 @@
-use porcus;
+use porcus::PigLatinTransformer;
 use std::io::{self, Write};
 
 fn main() {
-	let transformer = porcus::get_default_transformer();
+	// TODO:
+	// - doc
+	// - show help
+	// - pass suffixes on the command line
+	let transformer = PigLatinTransformer::default();
 
 	loop {
 		let mut input = String::new();

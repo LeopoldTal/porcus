@@ -1,4 +1,14 @@
 //! Case detection and mapping.
+//!
+//! # Usage
+//!
+//! ```
+//! use porcus::case::{self, Case};
+//!
+//! let s = "HELLO";
+//! assert_eq!(case::detect_case(&s), Case::Upper);
+//! assert_eq!(case::to_case(s, Case::Sentence), "Hello");
+//! ```
 
 use std::fmt;
 use unicode_segmentation::UnicodeSegmentation;
