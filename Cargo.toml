@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Pig latin for the whole Latin script."
 readme = "README.md"
-# TODO: repository
+repository = "https://github.com/LeopoldTal/porcus/"
 license = "MIT"
 keywords = ["piglatin", "pig-latin"]
 categories = ["text-processing"]
