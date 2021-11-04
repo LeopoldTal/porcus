@@ -108,11 +108,13 @@ impl PigLatinTransformer {
 	}
 
 	/// Gets the suffix appended to words starting with a consonant.
-	pub fn consonant_suffix(&self) -> &String {
+	#[must_use]
+	pub const fn consonant_suffix(&self) -> &String {
 		&self.consonant_suffix
 	}
 	/// Gets the suffix appended to words starting with a vowel.
-	pub fn vowel_suffix(&self) -> &String {
+	#[must_use]
+	pub const fn vowel_suffix(&self) -> &String {
 		&self.vowel_suffix
 	}
 
@@ -157,14 +159,12 @@ impl PigLatinTransformer {
 }
 
 fn should_skip_word(s: &str) -> bool {
-	if let Some(first_char) = s.chars().next() {
+	s.chars().next().map_or(true, |first_char| {
 		first_char.script().full_name() != "Latin"
-	} else {
-		true
-	}
+	})
 }
 
-fn has_consonant_at(graphemes: &Vec<&str>, index: usize) -> bool {
+fn has_consonant_at(graphemes: &[&str], index: usize) -> bool {
 	match char_type::get_char_type_at(graphemes, index) {
 		CharType::Consonant => true,
 		CharType::Ambiguous => matches!(

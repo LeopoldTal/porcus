@@ -119,8 +119,9 @@ impl fmt::Display for CharType {
 /// let v = &vec!["w"]; // a Welsh vowel
 /// assert_eq!(get_char_type_at(v, 0), CharType::Consonant);
 /// ```
-pub fn get_char_type_at(graphemes: &Vec<&str>, index: usize) -> CharType {
-	if let Some(first_char) = get_first_nfd_char_of_grapheme_at(graphemes, index) {
+#[must_use]
+pub fn get_char_type_at(graphemes: &[&str], index: usize) -> CharType {
+	get_first_nfd_char_of_grapheme_at(graphemes, index).map_or(CharType::Empty, |first_char| {
 		if VOWELS.contains(&first_char) {
 			return CharType::Vowel;
 		}
@@ -136,17 +137,13 @@ pub fn get_char_type_at(graphemes: &Vec<&str>, index: usize) -> CharType {
 		} else {
 			CharType::NonLatin
 		}
-	} else {
-		CharType::Empty
-	}
+	})
 }
 
-fn get_first_nfd_char_of_grapheme_at(graphemes: &Vec<&str>, index: usize) -> Option<char> {
-	if let Some(grapheme) = graphemes.get(index) {
-		grapheme.nfd().next()
-	} else {
-		None
-	}
+fn get_first_nfd_char_of_grapheme_at(graphemes: &[&str], index: usize) -> Option<char> {
+	graphemes
+		.get(index)
+		.and_then(|grapheme| grapheme.nfd().next())
 }
 
 #[cfg(test)]

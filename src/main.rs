@@ -3,7 +3,6 @@ use std::io::{self, Write};
 
 fn main() {
 	// TODO:
-	// - doc
 	// - show help
 	// - pass suffixes on the command line
 	let transformer = PigLatinTransformer::default();
@@ -19,7 +18,7 @@ fn main() {
 		}
 
 		let pig_latin = transformer.to_pig_latin(input);
-		if let Err(_) = io::stdout().write(pig_latin.as_bytes()) {
+		if io::stdout().write(pig_latin.as_bytes()).is_err() {
 			break;
 		}
 	}

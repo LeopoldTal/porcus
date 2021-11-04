@@ -28,7 +28,7 @@ pub enum Case {
 
 impl Default for Case {
 	fn default() -> Self {
-		Case::Mixed
+		Self::Mixed
 	}
 }
 
@@ -88,8 +88,9 @@ impl fmt::Display for Case {
 /// assert_eq!(detect_case("iPhone"), Case::Mixed);
 /// assert_eq!(detect_case("SpOnGeBoB"), Case::Mixed);
 /// ```
+#[must_use]
 pub fn detect_case(s: &str) -> Case {
-	if let Some(first_char) = s.chars().next() {
+	s.chars().next().map_or(Case::Lower, |first_char| {
 		let first_is_lower = !first_char.is_uppercase();
 		let first_is_upper = !first_char.is_lowercase();
 		let rest_is_upper = s.chars().skip(1).all(|c| !c.is_lowercase());
@@ -101,9 +102,7 @@ pub fn detect_case(s: &str) -> Case {
 			(_, true, _, true) => Case::Upper,
 			_ => Case::Mixed,
 		}
-	} else {
-		Case::Lower
-	}
+	})
 }
 
 /// Returns the equivalent of a string as the specified case.
@@ -131,12 +130,12 @@ pub fn to_case<S: Into<String>>(s: S, case: Case) -> String {
 	match case {
 		Case::Lower => s.to_lowercase(),
 		Case::Upper => s.to_uppercase(),
-		Case::Sentence => to_sentence_case(s),
+		Case::Sentence => to_sentence_case(&s),
 		Case::Mixed => s,
 	}
 }
 
-fn to_sentence_case(s: String) -> String {
+fn to_sentence_case(s: &str) -> String {
 	let mut graphemes = s.graphemes(true);
 	let first = graphemes.next();
 
